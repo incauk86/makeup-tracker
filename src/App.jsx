@@ -3,11 +3,13 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line
 } from "recharts";
+import { createClient } from "@supabase/supabase-js";
 
-// ─── INITIAL USERS ───────────────────────────────────────────
-const INITIAL_USERS = [
-  { id: "u1", email: "daniel@enroly.com", password: "admin123", name: "Dan", role: "admin" },
-];
+// ─── SUPABASE ─────────────────────────────────────────────────
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const ABSENCE_TYPES = ["Sick Leave","Personal Emergency","Unauthorised Absence","Lateness","Early Departure","Other"];
 const STATUSES      = ["Pending","Scheduled","In Progress","Completed","Partially Completed","Cancelled"];
@@ -49,14 +51,14 @@ function ChangePasswordModal({ currentUser, allUsers, onSaveUsers, onClose }) {
   const [error,    setError]    = useState("");
   const [success,  setSuccess]  = useState(false);
 
-  const handle = () => {
+  const handle = async () => {
     setError("");
     if (current !== currentUser.password)      { setError("Current password is incorrect."); return; }
     if (next.length < 6)                        { setError("New password must be at least 6 characters."); return; }
     if (next !== confirm)                       { setError("New passwords do not match."); return; }
     const updated = allUsers.map(u => u.id === currentUser.id ? { ...u, password: next } : u);
+    await supabase.from("users").update({ password: next }).eq("id", currentUser.id);
     onSaveUsers(updated);
-    // Update the stored session user too
     currentUser.password = next;
     setSuccess(true);
   };
@@ -140,15 +142,13 @@ function EntryTable({ entries, onEdit, onDelete, currentUser }) {
   );
 }
 
-// ─── LOGIN ───────────────────────────────────────────────────
-function LoginPage({ onLogin }) {
+function LoginPage({ onLogin, allUsers }) {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
 
   const handle = () => {
-    const users = loadLS("mu_users", INITIAL_USERS);
-    const user  = users.find(u => u.email.toLowerCase()===email.toLowerCase() && u.password===password);
+    const user = allUsers.find(u => u.email.toLowerCase()===email.toLowerCase() && u.password===password);
     if (user) onLogin(user);
     else setError("Email or password incorrect.");
   };
@@ -179,7 +179,6 @@ function LoginPage({ onLogin }) {
   );
 }
 
-// ─── EMPLOYEE VIEW ───────────────────────────────────────────
 function EmployeeView({ currentUser, allEntries, allUsers, onSave, onSaveUsers, onLogout }) {
   const myEntries = allEntries.filter(e => e.userId===currentUser.id);
   const [view, setView]       = useState("new");
@@ -276,7 +275,6 @@ function EmployeeView({ currentUser, allEntries, allUsers, onSave, onSaveUsers, 
   );
 }
 
-// ─── MANAGER / ADMIN VIEW ────────────────────────────────────
 function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteEntry, onSaveUsers, onLogout }) {
   const [view, setView]                 = useState("dashboard");
   const [activeMember, setActiveMember] = useState(null);
@@ -366,8 +364,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
       </div>
 
       <div style={{ padding:"24px", maxWidth:"1200px", margin:"0 auto" }}>
-
-        {/* DASHBOARD */}
         {view==="dashboard" && (
           <div>
             <h2 style={{ fontSize:"20px", fontWeight:700, marginBottom:"20px" }}>Team Overview</h2>
@@ -429,7 +425,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
           </div>
         )}
 
-        {/* ALL ENTRIES */}
         {view==="log" && (
           <div>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"20px" }}>
@@ -444,7 +439,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
           </div>
         )}
 
-        {/* BY MEMBER — list */}
         {view==="member" && !activeMember && (
           <div>
             <h2 style={{ fontSize:"20px", fontWeight:700, marginBottom:"20px" }}>By Team Member</h2>
@@ -464,7 +458,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
           </div>
         )}
 
-        {/* BY MEMBER — detail */}
         {view==="member" && activeMember && (
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"20px" }}>
@@ -477,7 +470,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
           </div>
         )}
 
-        {/* USER MANAGEMENT */}
         {view==="users" && currentUser.role==="admin" && (
           <div>
             <h2 style={{ fontSize:"20px", fontWeight:700, marginBottom:"20px" }}>User Management</h2>
@@ -519,7 +511,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
           </div>
         )}
 
-        {/* ADD / EDIT ENTRY */}
         {(view==="add"||view==="edit") && (
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"24px" }}>
@@ -570,20 +561,53 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
   );
 }
 
-// ─── ROOT ────────────────────────────────────────────────────
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [entries, setEntries] = useState(()=>loadLS("mu_entries",[]));
-  const [users, setUsers]     = useState(()=>{ const s=loadLS("mu_users",null); if(!s){saveLS("mu_users",INITIAL_USERS);return INITIAL_USERS;} return s; });
+  const [entries, setEntries] = useState([]);
+  const [users, setUsers]     = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const saveEntries = useCallback((e)=>{ setEntries(e); saveLS("mu_entries",e); },[]);
-  const saveUsers   = useCallback((u)=>{ setUsers(u);   saveLS("mu_users",u);   },[]);
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.from("users").select("*");
+      const { data: e } = await supabase.from("entries").select("*");
+      if (u) setUsers(u.map(r=>({ id:r.id, email:r.email, password:r.password, name:r.name, role:r.role })));
+      if (e) setEntries(e.map(r=>({ id:r.id, userId:r.user_id, memberName:r.member_name, absenceDate:r.absence_date, absenceType:r.absence_type, hoursOwed:r.hours_owed, makeupDate:r.makeup_date, authorisedBy:r.authorised_by, status:r.status, managerNotes:r.manager_notes, comments:r.comments, createdAt:r.created_at, updatedAt:r.updated_at })));
+      setLoading(false);
+    })();
+  }, []);
 
-  const handleSaveEntry   = (entry,isEdit) => saveEntries(isEdit ? entries.map(e=>e.id===entry.id?entry:e) : [entry,...entries]);
-  const handleDeleteEntry = (id)           => saveEntries(entries.filter(e=>e.id!==id));
-  const handleLogout      = ()             => setCurrentUser(null);
+  const saveUsers = useCallback(async (newUsers) => {
+    setUsers(newUsers);
+    for (const u of newUsers) {
+      await supabase.from("users").upsert({ id:u.id, email:u.email, password:u.password, name:u.name, role:u.role });
+    }
+    const newIds = newUsers.map(u=>u.id);
+    const removed = users.filter(u=>!newIds.includes(u.id));
+    for (const u of removed) { await supabase.from("users").delete().eq("id", u.id); }
+  }, [users]);
 
-  if (!currentUser) return <LoginPage onLogin={setCurrentUser}/>;
-  if (currentUser.role==="employee") return <EmployeeView currentUser={currentUser} allEntries={entries} allUsers={users} onSave={e=>saveEntries([e,...entries])} onSaveUsers={saveUsers} onLogout={handleLogout}/>;
+  const handleSaveEntry = useCallback(async (entry, isEdit) => {
+    const row = { id:entry.id, user_id:entry.userId, member_name:entry.memberName, absence_date:entry.absenceDate, absence_type:entry.absenceType, hours_owed:entry.hoursOwed, makeup_date:entry.makeupDate, authorised_by:entry.authorisedBy, status:entry.status, manager_notes:entry.managerNotes, comments:entry.comments, updated_at:new Date().toISOString() };
+    if (!isEdit) row.created_at = entry.createdAt;
+    await supabase.from("entries").upsert(row);
+    setEntries(prev => isEdit ? prev.map(e=>e.id===entry.id?entry:e) : [entry,...prev]);
+  }, []);
+
+  const handleDeleteEntry = useCallback(async (id) => {
+    await supabase.from("entries").delete().eq("id", id);
+    setEntries(prev => prev.filter(e=>e.id!==id));
+  }, []);
+
+  const handleLogout = () => setCurrentUser(null);
+
+  if (loading) return (
+    <div style={{ minHeight:"100vh", background:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", color:"#f1f5f9", fontFamily:"sans-serif", fontSize:"16px" }}>
+      Loading...
+    </div>
+  );
+
+  if (!currentUser) return <LoginPage onLogin={setCurrentUser} allUsers={users}/>;
+  if (currentUser.role==="employee") return <EmployeeView currentUser={currentUser} allEntries={entries} allUsers={users} onSave={e=>handleSaveEntry(e,false)} onSaveUsers={saveUsers} onLogout={handleLogout}/>;
   return <ManagerView currentUser={currentUser} allEntries={entries} allUsers={users} onSaveEntry={handleSaveEntry} onDeleteEntry={handleDeleteEntry} onSaveUsers={saveUsers} onLogout={handleLogout}/>;
 }
