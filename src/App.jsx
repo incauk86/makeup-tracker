@@ -11,7 +11,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-const ABSENCE_TYPES = ["Sick Leave","Personal Emergency","Unauthorised Absence","Lateness","Early Departure","Other"];
+const ABSENCE_TYPES = ["Sick Leave","Personal Emergency","Unauthorised Absence","Lateness","Early Departure","Holiday","Other"];
 const STATUSES      = ["Pending","Scheduled","In Progress","Completed","Partially Completed","Cancelled"];
 const PIE_COLORS    = ["#f59e0b","#3b82f6","#8b5cf6","#10b981","#06b6d4","#ef4444","#ec4899","#84cc16"];
 const STATUS_COLORS = { "Pending":"#f59e0b","Scheduled":"#3b82f6","In Progress":"#8b5cf6","Completed":"#10b981","Partially Completed":"#06b6d4","Cancelled":"#ef4444" };
