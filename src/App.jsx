@@ -5,7 +5,6 @@ import {
 } from "recharts";
 import { createClient } from "@supabase/supabase-js";
 
-// ─── SUPABASE ─────────────────────────────────────────────────
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -45,17 +44,17 @@ const loadLS = (key, def) => { try { const v = localStorage.getItem(key); return
 const saveLS = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
 
 function ChangePasswordModal({ currentUser, allUsers, onSaveUsers, onClose }) {
-  const [current,  setCurrent]  = useState("");
-  const [next,     setNext]     = useState("");
-  const [confirm,  setConfirm]  = useState("");
-  const [error,    setError]    = useState("");
-  const [success,  setSuccess]  = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext]       = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError]     = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handle = async () => {
     setError("");
-    if (current !== currentUser.password)      { setError("Current password is incorrect."); return; }
-    if (next.length < 6)                        { setError("New password must be at least 6 characters."); return; }
-    if (next !== confirm)                       { setError("New passwords do not match."); return; }
+    if (current !== currentUser.password) { setError("Current password is incorrect."); return; }
+    if (next.length < 6)                  { setError("New password must be at least 6 characters."); return; }
+    if (next !== confirm)                 { setError("New passwords do not match."); return; }
     const updated = allUsers.map(u => u.id === currentUser.id ? { ...u, password: next } : u);
     await supabase.from("users").update({ password: next }).eq("id", currentUser.id);
     onSaveUsers(updated);
@@ -76,15 +75,9 @@ function ChangePasswordModal({ currentUser, allUsers, onSaveUsers, onClose }) {
           </div>
         ) : (
           <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
-            <Field label="Current Password">
-              <input type="password" value={current} onChange={e=>setCurrent(e.target.value)} placeholder="••••••••" style={iStyle}/>
-            </Field>
-            <Field label="New Password">
-              <input type="password" value={next} onChange={e=>setNext(e.target.value)} placeholder="Min. 6 characters" style={iStyle}/>
-            </Field>
-            <Field label="Confirm New Password">
-              <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="••••••••" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/>
-            </Field>
+            <Field label="Current Password"><input type="password" value={current} onChange={e=>setCurrent(e.target.value)} placeholder="••••••••" style={iStyle}/></Field>
+            <Field label="New Password"><input type="password" value={next} onChange={e=>setNext(e.target.value)} placeholder="Min. 6 characters" style={iStyle}/></Field>
+            <Field label="Confirm New Password"><input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="••••••••" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/></Field>
             {error && <div style={{ color:"#ef4444", fontSize:"12px" }}>{error}</div>}
             <div style={{ display:"flex", gap:"8px", marginTop:"4px" }}>
               <button onClick={handle} style={{ flex:1, padding:"9px", borderRadius:"9px", border:"none", cursor:"pointer", fontSize:"13px", fontWeight:700, background:"#f59e0b", color:"#0f172a" }}>Update Password</button>
@@ -105,7 +98,7 @@ function EntryTable({ entries, onEdit, onDelete, currentUser }) {
       <table style={{ width:"100%", borderCollapse:"collapse" }}>
         <thead>
           <tr style={{ background:"#0f172a", borderBottom:"1px solid #334155" }}>
-            {["Member","Absence Date","Type","Hours","Makeup Date","Authorised By","Status","Comments", canEdit&&"Actions"].filter(Boolean).map(h=>(
+            {["Member","Absence Date","Type","Hours","Makeup Date","Authorised By","Status","Comments",canEdit&&"Actions"].filter(Boolean).map(h=>(
               <th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:"10px", fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:"0.06em", whiteSpace:"nowrap" }}>{h}</th>
             ))}
           </tr>
@@ -164,12 +157,8 @@ function LoginPage({ onLogin, allUsers }) {
         </div>
         <Card>
           <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
-            <Field label="Email">
-              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@enroly.com" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/>
-            </Field>
-            <Field label="Password">
-              <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/>
-            </Field>
+            <Field label="Email"><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@enroly.com" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/></Field>
+            <Field label="Password"><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={iStyle} onKeyDown={e=>e.key==="Enter"&&handle()}/></Field>
             {error && <div style={{ color:"#ef4444", fontSize:"13px" }}>{error}</div>}
             <button onClick={handle} style={{ width:"100%", padding:"11px", borderRadius:"10px", border:"none", cursor:"pointer", fontSize:"14px", fontWeight:700, background:"#f59e0b", color:"#0f172a" }}>Sign In</button>
           </div>
@@ -181,19 +170,28 @@ function LoginPage({ onLogin, allUsers }) {
 
 function EmployeeView({ currentUser, allEntries, allUsers, onSave, onSaveUsers, onLogout }) {
   const myEntries = allEntries.filter(e => e.userId===currentUser.id);
-  const [view, setView]       = useState("new");
-  const [form, setForm]       = useState(buildForm());
-  const [toast, setToast]     = useState(null);
-  const [showPwd, setShowPwd] = useState(false);
+  const [view, setView]             = useState("new");
+  const [entries_list, setEntriesList] = useState([buildRow()]);
+  const [toast, setToast]           = useState(null);
+  const [showPwd, setShowPwd]       = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  function buildForm() { return { absenceDate:today(), absenceType:"Sick Leave", hoursOwed:"", makeupDate:"", comments:"", status:"Pending" }; }
+  function buildRow() { return { id:generateId(), absenceDate:today(), absenceType:"Sick Leave", hoursOwed:"", makeupDate:"", comments:"" }; }
   const showToast = (msg,type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3000); };
+  const updateRow = (idx,field,value) => setEntriesList(prev=>prev.map((r,i)=>i===idx?{...r,[field]:value}:r));
+  const addRow    = () => setEntriesList(prev=>[...prev,buildRow()]);
+  const removeRow = (idx) => { if(entries_list.length===1)return; setEntriesList(prev=>prev.filter((_,i)=>i!==idx)); };
 
-  const submit = () => {
-    if (!form.absenceDate||!form.hoursOwed||!form.makeupDate) { showToast("Please fill in all required fields","error"); return; }
-    onSave({ ...form, id:generateId(), userId:currentUser.id, memberName:currentUser.name, authorisedBy:"Pending approval", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() });
-    showToast("Request submitted — your manager will be in touch.");
-    setForm(buildForm());
+  const submit = async () => {
+    const invalid = entries_list.find(r=>!r.absenceDate||!r.hoursOwed||!r.makeupDate);
+    if (invalid) { showToast("Please fill in all required fields for each entry","error"); return; }
+    setSubmitting(true);
+    for (const row of entries_list) {
+      await onSave({ ...row, id:generateId(), userId:currentUser.id, memberName:currentUser.name, authorisedBy:"Pending approval", status:"Pending", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() });
+    }
+    showToast(`${entries_list.length} request${entries_list.length>1?"s":""} submitted — your manager will be in touch.`);
+    setEntriesList([buildRow()]);
+    setSubmitting(false);
     setView("history");
   };
 
@@ -224,26 +222,43 @@ function EmployeeView({ currentUser, allEntries, allUsers, onSave, onSaveUsers, 
         </div>
 
         {view==="new" && (
-          <Card>
-            <h2 style={{ fontSize:"17px", fontWeight:700, marginBottom:"20px", color:"#f8fafc" }}>Submit a Makeup Time Request</h2>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px" }}>
-              <Field label="Date of Absence *"><input type="date" value={form.absenceDate} onChange={e=>setForm({...form,absenceDate:e.target.value})} style={iStyle}/></Field>
-              <Field label="Absence Type *">
-                <select value={form.absenceType} onChange={e=>setForm({...form,absenceType:e.target.value})} style={sStyle}>
-                  {ABSENCE_TYPES.map(t=><option key={t}>{t}</option>)}
-                </select>
-              </Field>
-              <Field label="Hours Owed *"><input type="number" step="0.5" min="0.5" placeholder="e.g. 7.5" value={form.hoursOwed} onChange={e=>setForm({...form,hoursOwed:e.target.value})} style={iStyle}/></Field>
-              <Field label="Proposed Makeup Date *"><input type="date" value={form.makeupDate} onChange={e=>setForm({...form,makeupDate:e.target.value})} style={iStyle}/></Field>
-              <div style={{ gridColumn:"1 / -1" }}>
-                <Field label="Comments / Context">
-                  <textarea rows={3} placeholder="Any additional details..." value={form.comments} onChange={e=>setForm({...form,comments:e.target.value})} style={{ ...iStyle, resize:"vertical" }}/>
-                </Field>
-              </div>
+          <div>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+              <h2 style={{ fontSize:"17px", fontWeight:700, color:"#f8fafc", margin:0 }}>Submit Makeup Time Requests</h2>
+              <button onClick={addRow} style={{ padding:"7px 14px", borderRadius:"8px", border:"1px dashed #334155", background:"transparent", color:"#f59e0b", cursor:"pointer", fontSize:"12px", fontWeight:600 }}>+ Add Another Absence</button>
             </div>
-            <button onClick={submit} style={{ marginTop:"20px", padding:"10px 24px", borderRadius:"10px", border:"none", cursor:"pointer", fontSize:"14px", fontWeight:700, background:"#f59e0b", color:"#0f172a" }}>✅ Submit Request</button>
-            <p style={{ marginTop:"12px", fontSize:"12px", color:"#64748b" }}>Your manager will review and confirm the arrangement with you directly.</p>
-          </Card>
+            <p style={{ fontSize:"12px", color:"#64748b", marginBottom:"20px", marginTop:0 }}>You can submit multiple absences at once. Fill in each one below.</p>
+            <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
+              {entries_list.map((row,idx)=>(
+                <Card key={row.id} style={{ position:"relative" }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+                    <span style={{ fontSize:"13px", fontWeight:700, color:"#94a3b8" }}>Absence {idx+1}</span>
+                    {entries_list.length>1 && <button onClick={()=>removeRow(idx)} style={{ padding:"3px 8px", borderRadius:"6px", border:"1px solid #334155", background:"transparent", color:"#ef4444", cursor:"pointer", fontSize:"11px" }}>✕ Remove</button>}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"14px" }}>
+                    <Field label="Date of Absence *"><input type="date" value={row.absenceDate} onChange={e=>updateRow(idx,"absenceDate",e.target.value)} style={iStyle}/></Field>
+                    <Field label="Absence Type *">
+                      <select value={row.absenceType} onChange={e=>updateRow(idx,"absenceType",e.target.value)} style={sStyle}>
+                        {ABSENCE_TYPES.map(t=><option key={t}>{t}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Hours Owed *"><input type="number" step="0.5" min="0.5" placeholder="e.g. 7.5" value={row.hoursOwed} onChange={e=>updateRow(idx,"hoursOwed",e.target.value)} style={iStyle}/></Field>
+                    <Field label="Proposed Makeup Date *"><input type="date" value={row.makeupDate} onChange={e=>updateRow(idx,"makeupDate",e.target.value)} style={iStyle}/></Field>
+                    <div style={{ gridColumn:"1 / -1" }}>
+                      <Field label="Comments / Context"><textarea rows={2} placeholder="Any additional details for this absence..." value={row.comments} onChange={e=>updateRow(idx,"comments",e.target.value)} style={{ ...iStyle, resize:"vertical" }}/></Field>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <div style={{ marginTop:"20px", display:"flex", alignItems:"center", gap:"12px" }}>
+              <button onClick={submit} disabled={submitting} style={{ padding:"10px 24px", borderRadius:"10px", border:"none", cursor:submitting?"not-allowed":"pointer", fontSize:"14px", fontWeight:700, background:"#f59e0b", color:"#0f172a", opacity:submitting?0.7:1 }}>
+                {submitting?"Submitting...":`✅ Submit ${entries_list.length>1?`${entries_list.length} Requests`:"Request"}`}
+              </button>
+              <button onClick={addRow} style={{ padding:"10px 16px", borderRadius:"10px", border:"1px dashed #334155", background:"transparent", color:"#94a3b8", cursor:"pointer", fontSize:"13px" }}>+ Add Another</button>
+            </div>
+            <p style={{ marginTop:"12px", fontSize:"12px", color:"#64748b" }}>Your manager will review and confirm each arrangement with you directly.</p>
+          </div>
         )}
 
         {view==="history" && (
@@ -256,9 +271,7 @@ function EmployeeView({ currentUser, allEntries, allUsers, onSave, onSaveUsers, 
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                       <div>
                         <div style={{ fontWeight:700, fontSize:"15px", marginBottom:"4px" }}>{fmtDate(e.absenceDate)} — {e.absenceType}</div>
-                        <div style={{ fontSize:"12px", color:"#64748b" }}>
-                          <span style={{ color:"#f59e0b", fontWeight:700 }}>{e.hoursOwed}h</span> owed · Makeup: {fmtDate(e.makeupDate)}
-                        </div>
+                        <div style={{ fontSize:"12px", color:"#64748b" }}><span style={{ color:"#f59e0b", fontWeight:700 }}>{e.hoursOwed}h</span> owed · Makeup: {fmtDate(e.makeupDate)}</div>
                         {e.comments && <div style={{ fontSize:"12px", color:"#64748b", marginTop:"4px" }}>{e.comments}</div>}
                         {e.managerNotes && <div style={{ fontSize:"12px", color:"#94a3b8", marginTop:"6px", background:"#0f172a", borderRadius:"6px", padding:"6px 10px" }}>Manager note: {e.managerNotes}</div>}
                       </div>
@@ -279,14 +292,14 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
   const [view, setView]                 = useState("dashboard");
   const [activeMember, setActiveMember] = useState(null);
   const [editEntry, setEditEntry]       = useState(null);
-  const [form, setForm]                 = useState(buildEntryForm(null, currentUser));
+  const [form, setForm]                 = useState(buildEntryForm(null,currentUser));
   const [toast, setToast]               = useState(null);
   const [filterStatus, setFilterStatus] = useState("All");
   const [userForm, setUserForm]         = useState({ name:"", email:"", password:"", role:"employee" });
   const [userError, setUserError]       = useState("");
   const [showPwd, setShowPwd]           = useState(false);
 
-  function buildEntryForm(member, cu) {
+  function buildEntryForm(member,cu) {
     return { userId:member?.id||"", memberName:member?.name||"", absenceDate:today(), absenceType:"Sick Leave", hoursOwed:"", makeupDate:"", authorisedBy:cu?.name||"", comments:"", status:"Pending", managerNotes:"" };
   }
 
@@ -298,20 +311,20 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
     if (!form.userId||!form.absenceDate||!form.hoursOwed) { showToast("Fill in all required fields","error"); return; }
     const isEdit = !!editEntry;
     const entry  = isEdit ? { ...editEntry, ...form, updatedAt:new Date().toISOString() } : { ...form, id:generateId(), createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
-    onSaveEntry(entry, isEdit);
+    onSaveEntry(entry,isEdit);
     showToast(isEdit?"Entry updated":"Entry added");
     setEditEntry(null); setForm(buildEntryForm(null,currentUser)); setView(activeMember?"member":"log");
   };
 
   const openEdit = (entry) => { setForm({...entry}); setEditEntry(entry); setView("edit"); };
   const openAdd  = (member=null) => { setForm(buildEntryForm(member,currentUser)); setEditEntry(null); setView("add"); };
-  const handleDelete = (id) => { if (!window.confirm("Delete this entry?")) return; onDeleteEntry(id); showToast("Deleted"); };
+  const handleDelete = (id) => { if(!window.confirm("Delete this entry?"))return; onDeleteEntry(id); showToast("Deleted"); };
 
   const addUser = () => {
     setUserError("");
     if (!userForm.name||!userForm.email||!userForm.password) { setUserError("All fields are required."); return; }
     if (allUsers.find(u=>u.email.toLowerCase()===userForm.email.toLowerCase())) { setUserError("That email is already registered."); return; }
-    onSaveUsers([...allUsers, { id:generateId(), ...userForm }]);
+    onSaveUsers([...allUsers,{ id:generateId(),...userForm }]);
     setUserForm({ name:"", email:"", password:"", role:"employee" });
     showToast(`${userForm.name} added`);
   };
@@ -333,7 +346,6 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
   const monthlyMap      = {};
   allEntries.forEach(e=>{ const mo=e.absenceDate?.slice(0,7); if(!mo)return; if(!monthlyMap[mo])monthlyMap[mo]={month:mo,hours:0}; monthlyMap[mo].hours+=parseFloat(e.hoursOwed)||0; });
   const monthlyData = Object.values(monthlyMap).sort((a,b)=>a.month.localeCompare(b.month)).slice(-8).map(d=>({...d,label:new Date(d.month+"-01").toLocaleDateString("en-GB",{month:"short",year:"2-digit"})}));
-
   const navItems = [["dashboard","📊 Dashboard"],["log","📋 All Entries"],["member","👥 By Member"],...(currentUser.role==="admin"?[["users","⚙️ Users"]]:[])];
 
   return (
@@ -563,9 +575,9 @@ function ManagerView({ currentUser, allEntries, allUsers, onSaveEntry, onDeleteE
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [entries, setEntries] = useState([]);
-  const [users, setUsers]     = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [entries, setEntries]         = useState([]);
+  const [users, setUsers]             = useState([]);
+  const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -575,28 +587,39 @@ export default function App() {
       if (e) setEntries(e.map(r=>({ id:r.id, userId:r.user_id, memberName:r.member_name, absenceDate:r.absence_date, absenceType:r.absence_type, hoursOwed:r.hours_owed, makeupDate:r.makeup_date, authorisedBy:r.authorised_by, status:r.status, managerNotes:r.manager_notes, comments:r.comments, createdAt:r.created_at, updatedAt:r.updated_at })));
       setLoading(false);
     })();
+
+    const toEntry = r => ({ id:r.id, userId:r.user_id, memberName:r.member_name, absenceDate:r.absence_date, absenceType:r.absence_type, hoursOwed:r.hours_owed, makeupDate:r.makeup_date, authorisedBy:r.authorised_by, status:r.status, managerNotes:r.manager_notes, comments:r.comments, createdAt:r.created_at, updatedAt:r.updated_at });
+
+    const channel = supabase
+      .channel("entries-live")
+      .on("postgres_changes", { event:"*", schema:"public", table:"entries" }, (payload) => {
+        if (payload.eventType==="INSERT") { const entry=toEntry(payload.new); setEntries(prev=>prev.find(e=>e.id===entry.id)?prev:[entry,...prev]); }
+        if (payload.eventType==="UPDATE") { const entry=toEntry(payload.new); setEntries(prev=>prev.map(e=>e.id===entry.id?entry:e)); }
+        if (payload.eventType==="DELETE") { setEntries(prev=>prev.filter(e=>e.id!==payload.old.id)); }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
   const saveUsers = useCallback(async (newUsers) => {
     setUsers(newUsers);
-    for (const u of newUsers) {
-      await supabase.from("users").upsert({ id:u.id, email:u.email, password:u.password, name:u.name, role:u.role });
-    }
+    for (const u of newUsers) { await supabase.from("users").upsert({ id:u.id, email:u.email, password:u.password, name:u.name, role:u.role }); }
     const newIds = newUsers.map(u=>u.id);
     const removed = users.filter(u=>!newIds.includes(u.id));
-    for (const u of removed) { await supabase.from("users").delete().eq("id", u.id); }
+    for (const u of removed) { await supabase.from("users").delete().eq("id",u.id); }
   }, [users]);
 
   const handleSaveEntry = useCallback(async (entry, isEdit) => {
     const row = { id:entry.id, user_id:entry.userId, member_name:entry.memberName, absence_date:entry.absenceDate, absence_type:entry.absenceType, hours_owed:entry.hoursOwed, makeup_date:entry.makeupDate, authorised_by:entry.authorisedBy, status:entry.status, manager_notes:entry.managerNotes, comments:entry.comments, updated_at:new Date().toISOString() };
     if (!isEdit) row.created_at = entry.createdAt;
     await supabase.from("entries").upsert(row);
-    setEntries(prev => isEdit ? prev.map(e=>e.id===entry.id?entry:e) : [entry,...prev]);
+    setEntries(prev=>isEdit?prev.map(e=>e.id===entry.id?entry:e):[entry,...prev]);
   }, []);
 
   const handleDeleteEntry = useCallback(async (id) => {
-    await supabase.from("entries").delete().eq("id", id);
-    setEntries(prev => prev.filter(e=>e.id!==id));
+    await supabase.from("entries").delete().eq("id",id);
+    setEntries(prev=>prev.filter(e=>e.id!==id));
   }, []);
 
   const handleLogout = () => setCurrentUser(null);
