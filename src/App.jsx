@@ -241,7 +241,7 @@ function LoginPage({onLogin,allUsers}) {
       <div style={{width:"100%",maxWidth:"380px",padding:"0 24px"}}>
         <div style={{textAlign:"center",marginBottom:"32px"}}>
           <div style={{width:"56px",height:"56px",borderRadius:"14px",background:"linear-gradient(135deg,#f59e0b,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",margin:"0 auto 16px"}}>⏱</div>
-          <div style={{fontWeight:700,fontSize:"22px",color:"#f8fafc"}}>Makeup Time Tracker</div>
+          <div style={{fontWeight:700,fontSize:"22px",color:"#f8fafc"}}>Team Time Portal</div>
           <div style={{fontSize:"13px",color:"#64748b",marginTop:"4px"}}>Enroly Assessment Team</div>
         </div>
         <Card>
@@ -308,7 +308,7 @@ function EmployeeView({currentUser,allEntries,allUsers,onSave,onSaveUsers,onLogo
       <div style={{background:"#1e293b",borderBottom:"1px solid #334155",padding:"0 24px",display:"flex",alignItems:"center",justifyContent:"space-between",height:"56px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
           <div style={{width:"30px",height:"30px",borderRadius:"8px",background:"linear-gradient(135deg,#f59e0b,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>⏱</div>
-          <span style={{fontWeight:700,fontSize:"14px"}}>Makeup Time Tracker</span>
+          <span style={{fontWeight:700,fontSize:"14px"}}>Team Time Portal</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
           <div style={{width:"28px",height:"28px",borderRadius:"50%",background:`hsl(${currentUser.name.charCodeAt(0)*15},60%,40%)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700}}>{currentUser.name[0]}</div>
@@ -638,7 +638,7 @@ function ManagerView({currentUser,allEntries,allUsers,onSaveEntry,onDeleteEntry,
       <div style={{background:"#1e293b",borderBottom:"1px solid #334155",padding:"0 24px",display:"flex",alignItems:"center",justifyContent:"space-between",height:"56px",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
           <div style={{width:"30px",height:"30px",borderRadius:"8px",background:"linear-gradient(135deg,#f59e0b,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>⏱</div>
-          <div><div style={{fontWeight:700,fontSize:"14px"}}>Makeup Time Tracker</div>
+          <div><div style={{fontWeight:700,fontSize:"14px"}}>Team Time Portal</div>
           <div style={{fontSize:"10px",color:"#64748b",textTransform:"uppercase",letterSpacing:".06em"}}>Enroly · {currentUser.role==="admin"?"Admin":"Manager"}</div></div>
         </div>
         <div style={{display:"flex",gap:"4px",alignItems:"center"}}>
